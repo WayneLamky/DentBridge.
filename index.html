@@ -2,17 +2,42 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+
     <title>DentBridge — 海外牙医执业路径平台</title>
+    <meta name="description" content="DentBridge 是面向中国牙医的海外执业路径评估平台，帮助你规划通往美国、加拿大、澳大利亚、新西兰、英国等地执业的最佳路线。" />
+    <meta name="keywords" content="海外牙医,牙医执业,海外执业,牙医留学,DentBridge,NBDE,INBDE,ADC,NDEB,ORE" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="DentBridge — 海外牙医执业路径平台" />
+    <meta property="og:description" content="搭建通往海外执业的桥梁：一站式评估你的海外牙医执业路径。" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DentBridge — 海外牙医执业路径平台" />
+    <meta name="twitter:description" content="搭建通往海外执业的桥梁：一站式评估你的海外牙医执业路径。" />
+
+    <link rel="icon" type="image/svg+xml" href="icons.svg" />
+
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <link rel="modulepreload" href="assets/index-DUlz_ncb.js" />
+    <link rel="preload" href="assets/index-CfM5sh_-.css" as="style" />
     <script type="module" crossorigin src="assets/index-DUlz_ncb.js"></script>
     <link rel="stylesheet" crossorigin href="assets/index-CfM5sh_-.css">
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="max-width:640px;margin:64px auto;padding:24px;font-family:Inter,system-ui,sans-serif;color:#111;text-align:center;">
+        <h1 style="font-size:20px;margin:0 0 12px;">DentBridge 需要 JavaScript</h1>
+        <p style="color:#555;line-height:1.6;">请开启浏览器的 JavaScript 以使用海外执业路径评估。</p>
+      </div>
+    </noscript>
     <style>
       /* Radio button selected state */
       label:has(input[type="radio"]:checked) {
@@ -22,6 +47,12 @@
       }
       label:has(input[type="radio"]:checked) span {
         color: #fff !important;
+      }
+      /* Respect users who prefer less motion */
+      @media (prefers-reduced-motion: reduce) {
+        label:has(input[type="radio"]:checked) {
+          transform: none;
+        }
       }
       /* Custom select dropdown styling */
       select {
@@ -61,24 +92,62 @@
       }
     </style>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Add values to radio inputs
-        document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
-          var text = radio.parentElement.querySelector('span');
-          if (text) radio.value = text.textContent.trim();
+      (function () {
+        // Assign each radio's value from its sibling <span> text.
+        // React renders radios AFTER DOMContentLoaded, so we observe the DOM
+        // instead of running once on load (the previous behavior was a no-op).
+        function syncRadioValue(radio) {
+          if (!radio || radio.dataset.valueSynced === '1') return;
+          var parent = radio.parentElement;
+          var span = parent && parent.querySelector('span');
+          if (span) {
+            radio.value = span.textContent.trim();
+            radio.dataset.valueSynced = '1';
+          }
+        }
+        function syncAll(root) {
+          (root || document).querySelectorAll('input[type="radio"]').forEach(syncRadioValue);
+        }
+
+        var observer = new MutationObserver(function (mutations) {
+          for (var i = 0; i < mutations.length; i++) {
+            var added = mutations[i].addedNodes;
+            for (var j = 0; j < added.length; j++) {
+              var node = added[j];
+              if (node.nodeType !== 1) continue;
+              if (node.matches && node.matches('input[type="radio"]')) {
+                syncRadioValue(node);
+              } else if (node.querySelectorAll) {
+                syncAll(node);
+              }
+            }
+          }
         });
 
-        // "开始路线评估" button scrolls to assessment form
-        document.addEventListener('click', function(e) {
-          var btn = e.target.closest('button.bg-\\[\\#E5E7EB\\]');
-          if (btn) {
-            e.stopPropagation();
-            e.preventDefault();
-            var target = document.getElementById('assessment');
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
-          }
+        function start() {
+          syncAll();
+          var root = document.getElementById('root') || document.body;
+          observer.observe(root, { childList: true, subtree: true });
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', start, { once: true });
+        } else {
+          start();
+        }
+
+        // "开始路线评估" button scrolls to the assessment form.
+        document.addEventListener('click', function (e) {
+          var btn = e.target.closest && e.target.closest('button.bg-\\[\\#E5E7EB\\]');
+          if (!btn) return;
+          var target = document.getElementById('assessment');
+          if (!target) return;
+          e.stopPropagation();
+          e.preventDefault();
+          var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
         }, true);
-      });
+      })();
     </script>
   </body>
 </html>
