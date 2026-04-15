@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(npm create:*)",
+      "Bash(yes)",
+      "Bash(npm install:*)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__mcp-registry__search_mcp_registry",
+      "WebSearch",
+      "Bash(claude mcp:*)",
+      "Bash(npm run:*)",
+      "Bash(git config:*)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}
