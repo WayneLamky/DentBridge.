@@ -1,5 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { ArrowRight, Globe, FileText, CheckCircle, ChevronDown, MapPin } from 'lucide-react';
+
+// 3D 场景懒加载，避免首屏阻塞
+const ToothScene = lazy(() => import('./ToothScene.jsx'));
 
 const EASE = 'cubic-bezier(0.16,1,0.3,1)';
 
@@ -129,22 +132,40 @@ export default function App() {
         </button>
       </nav>
 
-      {/* Hero — Sticky base layer */}
-      <section className="sticky top-0 z-10 min-h-screen flex items-center justify-center bg-black">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center py-32">
+      {/* Hero — 3D 牙齿背景 + 文案 */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+        {/* 径向光晕背景，衬托 3D 模型 */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 z-0"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 55%, rgba(96,165,250,0.18) 0%, rgba(0,0,0,0) 55%), radial-gradient(circle at 20% 80%, rgba(251,191,36,0.12) 0%, rgba(0,0,0,0) 50%)',
+          }}
+        />
+
+        {/* 3D 牙齿画布 */}
+        <div className="absolute inset-0 z-0">
+          <Suspense fallback={null}>
+            <ToothScene />
+          </Suspense>
+        </div>
+
+        {/* 文案层：指针事件穿透，避免遮住 3D 交互，按钮/链接单独恢复 */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 flex flex-col items-center text-center py-32 pointer-events-none">
           <Reveal>
-            <div className="inline-block border border-neutral-700 rounded-full px-4 py-1.5 text-sm mb-8 text-neutral-300 uppercase tracking-widest">
+            <div className="inline-block border border-neutral-700/80 bg-black/30 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm mb-8 text-neutral-300 uppercase tracking-widest">
               为中国牙医连接海外留学、执业与落地路径
             </div>
           </Reveal>
           <Reveal delay={0.1}>
-            <h1 className="text-6xl md:text-7xl lg:text-[6.5rem] font-bold tracking-tighter leading-none mb-8">
+            <h1 className="text-6xl md:text-7xl lg:text-[6.5rem] font-bold tracking-tighter leading-none mb-8 drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
               搭建通往<br />
               <span className="text-neutral-400">海外执业的桥梁</span>
             </h1>
           </Reveal>
           <Reveal delay={0.2}>
-            <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mb-14 font-light leading-relaxed">
+            <p className="text-lg md:text-xl text-neutral-300 max-w-2xl mb-14 font-light leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
               Bridging Your Dental Career Globally. <br className="hidden md:block" />
               连接留学申请、执业考试与海外落地的一站式牙医平台。
             </p>
@@ -153,17 +174,23 @@ export default function App() {
             <button
               type="button"
               onClick={() => scrollToId('assessment')}
-              className="bg-[#E5E7EB] text-black px-8 py-4 rounded-full text-lg font-semibold flex items-center space-x-2 hover:bg-white hover:scale-105 transition-all duration-300 ease-out"
+              className="pointer-events-auto bg-[#E5E7EB] text-black px-8 py-4 rounded-full text-lg font-semibold flex items-center space-x-2 hover:bg-white hover:scale-105 transition-all duration-300 ease-out shadow-xl"
             >
               <span>开始路线评估</span>
               <ArrowRight className="w-5 h-5" />
             </button>
           </Reveal>
         </div>
+
+        {/* 滚动指示 */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-neutral-500 text-xs uppercase tracking-widest flex flex-col items-center gap-2 animate-pulse">
+          <span>Scroll</span>
+          <ChevronDown className="w-4 h-4" />
+        </div>
       </section>
 
-      {/* Destination Comparison — Slides over Hero */}
-      <section id="destinations" className="sticky top-0 z-20 bg-[#F4F4F5] text-black rounded-t-[3rem] px-6 py-32 -mt-16 scroll-mt-24">
+      {/* Destination Comparison */}
+      <section id="destinations" className="relative bg-[#F4F4F5] text-black rounded-t-[3rem] px-6 py-32 scroll-mt-24">
         <div className="max-w-7xl mx-auto">
           <Reveal>
             <div className="mb-20">
@@ -242,8 +269,8 @@ export default function App() {
         </div>
       </section>
 
-      {/* Route Assessment — Slides over Destinations */}
-      <section id="assessment" className="sticky top-0 z-30 bg-white rounded-t-[3rem] px-6 py-32 -mt-20 scroll-mt-24">
+      {/* Route Assessment */}
+      <section id="assessment" className="relative bg-white px-6 py-32 scroll-mt-24">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-start">
           <div className="w-full lg:w-2/5 lg:sticky lg:top-32">
             <Reveal>
@@ -441,8 +468,8 @@ export default function App() {
         </div>
       </section>
 
-      {/* Cases & FAQ — Slides over Assessment */}
-      <section id="cases" className="sticky top-0 z-40 bg-black text-white rounded-t-[3rem] px-6 py-32 -mt-20 scroll-mt-24">
+      {/* Cases & FAQ */}
+      <section id="cases" className="relative bg-black text-white rounded-t-[3rem] px-6 py-32 scroll-mt-24">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             {/* Success Case */}
@@ -500,7 +527,7 @@ export default function App() {
       </section>
 
       {/* Footer — final layer */}
-      <footer className="relative z-50 bg-black text-neutral-500 py-16 px-6 border-t border-neutral-900">
+      <footer className="relative bg-black text-neutral-500 py-16 px-6 border-t border-neutral-900">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="text-2xl font-bold text-white tracking-tighter mb-4 md:mb-0">DentBridge.</div>
           <div className="flex space-x-6 text-sm">
